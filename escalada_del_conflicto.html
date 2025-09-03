@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escalada de Conflictos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937;
+            color: #e5e7eb;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .card {
+            background-color: #374151;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+        }
+        .card-header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #f9fafb;
+            border-bottom: 2px solid #4b5563;
+        }
+        .card-content {
+            padding: 1.5rem 2rem;
+            display: none;
+            color: #d1d5db;
+        }
+        .card.open .card-content {
+            display: block;
+        }
+        .level-1 .card-header { background-color: #16a34a; }
+        .level-2 .card-header { background-color: #f59e0b; }
+        .level-3 .card-header { background-color: #dc2626; }
+
+        .phase-card {
+            background-color: #4b5563;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Colores para las tarjetas de rol */
+        .negotiator-card { background-color: #2563eb; }
+        .negotiator-card .card-content { background-color: #1d4ed8; }
+        .mediator-card { background-color: #0d9488; }
+        .mediator-card .card-content { background-color: #0f766e; }
+        .conciliator-card { background-color: #ca8a04; }
+        .conciliator-card .card-content { background-color: #a16207; }
+        .arbitrator-card { background-color: #9333ea; }
+        .arbitrator-card .card-content { background-color: #7e22ce; }
+
+        .arrow-icon {
+            transition: transform 0.3s ease;
+        }
+        .card.open .arrow-icon {
+            transform: rotate(180deg);
+        }
+        .emoji-icon {
+            font-size: 4rem;
+            display: block;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .svg-text {
+            fill: #f9fafb;
+            font-weight: bold;
+        }
+        .svg-label {
+            fill: #d1d5db;
+        }
+
+        /* Estilos para la actividad interactiva */
+        .quiz-container {
+            background-color: #2d3748;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .quiz-question {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #f9fafb;
+            margin-bottom: 1.5rem;
+        }
+        .quiz-options button {
+            background-color: #4b5563;
+            color: #e5e7eb;
+            font-size: 1.125rem;
+            font-weight: 600;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-bottom: 0.75rem;
+        }
+        .quiz-options button:hover {
+            background-color: #6b7280;
+        }
+        .quiz-options button.correct {
+            background-color: #10b981;
+            color: white;
+            pointer-events: none;
+        }
+        .quiz-options button.incorrect {
+            background-color: #ef4444;
+            color: white;
+            pointer-events: none;
+        }
+        .quiz-feedback {
+            font-size: 1.25rem;
+            margin-top: 1.5rem;
+            font-weight: bold;
+        }
+        .quiz-feedback.correct {
+            color: #10b981;
+        }
+        .quiz-feedback.incorrect {
+            color: #ef4444;
+        }
+        .quiz-next-btn {
+            background-color: #3b82f6;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            margin-top: 1.5rem;
+            display: none;
+            width: auto;
+            cursor: pointer;
+        }
+        .quiz-restart-btn {
+            background-color: #3b82f6;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            margin-top: 1.5rem;
+            width: auto;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+
+    <div class="container mx-auto py-16 px-6">
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-blue-400 mb-4">Escalada de Conflictos</h1>
+            <p class="text-xl md:text-2xl text-gray-400">Un análisis interactivo del modelo de Glasl y sus soluciones.</p>
+            <!-- Información del encabezado -->
+            <div class="mt-4 text-gray-300 text-sm">
+                <p><strong>Diseñado por:</strong> Licda. Angela Maria Rangel Montufar</p>
+                <p><strong>Curso:</strong> Evaluación y Resolución de Conflictos</p>
+                <p><strong>Ciclo:</strong> X</p>
+                <p class="mt-4 flex items-center justify-center">
+                  <span class="mr-2">Universidad Mariano Gálvez de Guatemala</span>
+                  
+                </p>
+            </div>
+        </header>
+
+        <!-- Concepto de la Escalada -->
+        <section class="mb-16">
+            <div class="card p-8">
+                <h2 class="text-3xl font-bold mb-6 text-blue-300">¿Qué es la Escalada de Conflictos?</h2>
+                <p class="text-gray-300 leading-relaxed">La <strong>escalada del conflicto</strong> es un proceso gradual en el que un desacuerdo se intensifica, volviéndose más complejo, hostil y difícil de resolver, similar a una bola de nieve que gana fuerza a medida que rueda. Se caracteriza por un aumento en la intensidad de las tácticas, un mayor número de partes involucradas y un deterioro en la comunicación y empatía entre los participantes.</p>
+            </div>
+        </section>
+
+        <!-- Video de ejemplo -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-blue-300">Ejemplo de Escalada</h2>
+            <div class="aspect-w-16 aspect-h-9 w-full rounded-2xl overflow-hidden shadow-xl">
+                <iframe class="w-full h-full" src="https://www.youtube.com/embed/xsYk8_J7qzw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="card p-8 mt-8">
+                <h3 class="text-2xl font-bold mb-4 text-blue-200">¿Cómo se da la escalada en este video?</h3>
+                <p class="mb-4">Este video ilustra perfectamente las primeras fases de la escalada de un conflicto de pareja, según el modelo de Glasl. Observa cómo la tensión inicial por un desorden en casa se transforma en algo más profundo y destructivo.</p>
+                <ul class="list-disc list-inside space-y-2 text-gray-300">
+                    <li><strong>Fase 1 (Tensión y Desacuerdo):</strong> Al inicio, el problema es simplemente el desorden en la casa. "No puedo ser tan maniática como tú", dice uno. Ambos están en desacuerdo, pero el conflicto aún es superficial.</li>
+                    <li><strong>Fase 2 (Debate y Polarización):</strong> La discusión escala. El tema ya no es solo el desorden, sino la comparación de estilos de vida: "ya me gustaría a mí teletrabajar desde casa y tener todo el tiempo que tienes tú". Las posiciones se vuelven más rígidas, cada uno intentando demostrar que tiene la razón.</li>
+                    <li><strong>Fase 3 (De Palabras a Acciones y Pérdida de Empatía):</strong> El conflicto se vuelve personal. Los argumentos se vuelven irrelevantes y los ataques verbales se intensifican. Cuando se menciona a los padres, la discusión se desvía completamente del problema original y se convierte en un ataque personal, demostrando una total falta de empatía.</li>
+                </ul>
+                <p class="mt-4 text-gray-300">El video nos muestra cómo un conflicto puede escalar rápidamente si no se maneja adecuadamente. La segunda parte, que muestra la misma situación con una comunicación asertiva, sirve como un ejemplo de cómo "desescalar" el conflicto y encontrar una solución constructiva.</p>
+            </div>
+        </section>
+
+        <!-- Niveles de Escalada de Glasl -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-blue-300">Niveles de Escalada (Modelo de Glasl)</h2>
+            <div class="flex justify-center mb-12">
+                <svg width="100%" height="400" viewBox="0 -100 500 400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Ground level -->
+                    <rect x="0" y="280" width="500" height="20" fill="#4b5563" />
+
+                    <!-- Levels with gradient -->
+                    <path d="M50 220 L450 220 L400 120 L100 120 Z" fill="#22c55e" stroke="#16a34a" stroke-width="4" />
+                    <path d="M100 120 L400 120 L350 20 L150 20 Z" fill="#facc15" stroke="#f59e0b" stroke-width="4" />
+                    <path d="M150 20 L350 20 L300 -80 L200 -80 Z" fill="#ef4444" stroke="#dc2626" stroke-width="4" />
+                    
+                    <!-- Labels -->
+                    <text x="250" y="170" font-family="Inter" font-size="20" font-weight="bold" text-anchor="middle" class="svg-text">Ganar-Ganar (Fases 1-3)</text>
+                    <text x="250" y="70" font-family="Inter" font-size="20" font-weight="bold" text-anchor="middle" class="svg-text">Ganar-Perder (Fases 4-6)</text>
+                    <text x="250" y="-30" font-family="Inter" font-size="20" font-weight="bold" text-anchor="middle" class="svg-text">Perder-Perder (Fases 7-9)</text>
+
+                    <!-- Arrow -->
+                    <path d="M250 290 L250 10 C250 5, 255 0, 260 0 L260 0 L270 10 L260 0 L250 10" fill="#f9fafb" />
+                </svg>
+            </div>
+
+            <!-- Nivel 1: Ganar-Ganar -->
+            <div id="level1" class="card level-1">
+                <div class="card-header">
+                    <span>Nivel 1: Ganar-Ganar (Fases 1-3)</span>
+                    <svg class="arrow-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <p class="mb-4">En esta etapa el conflicto es considerado <strong>constructivo</strong>. Hay diálogo y las partes pueden negociar directamente para encontrar una solución mutuamente beneficiosa.</p>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 1: Tensión y Desacuerdo</h3>
+                        <p class="text-gray-400">El conflicto a menudo no se reconoce como tal. Las tensiones están presentes pero son latentes.</p>
+                    </div>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 2: Debate y Polarización</h3>
+                        <p class="text-gray-400">Las partes comienzan a discutir y debatir para convencerse mutuamente. El pensamiento es de "blanco o negro".</p>
+                    </div>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 3: De Palabras a Acciones</h3>
+                        <p class="text-gray-400">El diálogo disminuye a medida que las acciones de cada parte comienzan a definir su posición. La empatía decrece.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nivel 2: Ganar-Perder -->
+            <div id="level2" class="card level-2">
+                <div class="card-header">
+                    <span>Nivel 2: Ganar-Perder (Fases 4-6)</span>
+                    <svg class="arrow-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <p class="mb-4">El conflicto se vuelve más <strong>polarizado</strong>, por lo que es difícil resolverlo sin ayuda externa. El objetivo es que una parte gane y la otra pierda.</p>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 4: Formación de Coaliciones</h3>
+                        <p class="text-gray-400">El problema original deja de ser importante. Las partes buscan apoyo en otros, formando alianzas.</p>
+                    </div>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 5: Pérdida de Cara</h3>
+                        <p class="text-gray-400">Los oponentes se desacreditan públicamente con exageraciones y mentiras para avergonzarse mutuamente.</p>
+                    </div>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 6: Estrategias de Amenaza</h3>
+                        <p class="text-gray-400">Las partes intentan controlarla situación con amenazas, lo que incrementa la tensión y el riesgo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nivel 3: Perder-Perder -->
+            <div id="level3" class="card level-3">
+                <div class="card-header">
+                    <span>Nivel 3: Perder-Perder (Fases 7-9)</span>
+                    <svg class="arrow-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <p class="mb-4">En este punto, el conflicto es <strong>destructivo</strong>. El objetivo principal es causar daño, y la idea de una solución ya no existe.</p>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 7: Destrucción Limitada</h3>
+                        <p class="text-gray-400">Las partes se causan daño mutuamente, y sus propias pérdidas son aceptables siempre que el otro pierda más.</p>
+                    </div>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 8: Aniquilación</h3>
+                        <p class="text-gray-400">El objetivo es la aniquilación total de los oponentes por cualquier medio posible.</p>
+                    </div>
+                    <div class="phase-card">
+                        <h3 class="font-semibold text-lg mb-1">Fase 9: Juntos al Abismo</h3>
+                        <p class="text-gray-400">La aniquilación personal se vuelve aceptable con tal de que el oponente también caiga. La lógica es completamente autodestructiva.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Roles en la Resolución de Conflictos -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-blue-300">Roles en la Resolución de Conflictos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Negociador -->
+                <div class="card negotiator-card">
+                    <div class="card-header">
+                        <span>Negociador</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="aspect-w-16 aspect-h-9 w-full rounded-lg overflow-hidden mb-4">
+                            <iframe class="w-full h-full" src="https://www.youtube.com/embed/o_quqX2aOW8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-4">Ejemplo de un video que muestra a dos partes discutiendo sus intereses directamente para llegar a un acuerdo mutuo.</p>
+                        <p class="mb-4">Un <strong>negociador</strong> es una parte directa interesada en el conflicto. Su objetivo es representar sus propios intereses y encontrar una solución mutuamente beneficiosa.</p>
+                        <p class="text-sm">Reglas principales: comunicación clara, respeto mutuo.</p>
+                    </div>
+                </div>
+
+                <!-- Mediador -->
+                <div class="card mediator-card">
+                    <div class="card-header">
+                        <span>Mediador</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="aspect-w-16 aspect-h-9 w-full rounded-lg overflow-hidden mb-4">
+                            <iframe class="w-full h-full" src="https://www.youtube.com/embed/ep-nqKR39V4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-4">Ejemplo de un video que muestra a un tercero imparcial ayudando a dos partes a comunicarse, sin tomar partido ni proponer soluciones.</p>
+                        <p class="mb-4">Un <strong>mediador</strong> es un tercero imparcial que facilita la comunicación y ayuda a las partes a encontrar un acuerdo voluntario.</p>
+                        <p class="text-sm">Reglas principales: imparcialidad, confidencialidad.</p>
+                    </div>
+                </div>
+
+                <!-- Conciliador -->
+                <div class="card conciliator-card">
+                    <div class="card-header">
+                        <span>Conciliador</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="aspect-w-16 aspect-h-9 w-full rounded-lg overflow-hidden mb-4">
+                            <iframe class="w-full h-full" src="https://www.youtube.com/embed/Fb7xQFJcd5o" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-4">Ejemplo de un video en el que un tercero neutral propone alternativas para que las partes resuelvan su conflicto, las cuales pueden ser aceptadas o rechazadas.</p>
+                        <p class="mb-4">Un <strong>conciliador</strong> es un tercero neutral que puede proponer soluciones concretas y prácticas. Las partes son libres de aceptarlas o rechazarlas.</p>
+                        <p class="text-sm">Reglas principales: neutralidad activa, proponer alternativas realistas.</p>
+                    </div>
+                </div>
+
+                <!-- Árbitro -->
+                <div class="card arbitrator-card">
+                    <div class="card-header">
+                        <span>Árbitro</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="aspect-w-16 aspect-h-9 w-full rounded-lg overflow-hidden mb-4">
+                            <iframe class="w-full h-full" src="https://www.youtube.com/embed/TOkcExkgq9c" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-4">Ejemplo de un video que muestra a un tercero con la autoridad de tomar una decisión final y vinculante para ambas partes.</p>
+                        <p class="mb-4">Un <strong>árbitro</strong> es un tercero con autoridad para imponer una decisión vinculante. Se usa cuando el diálogo ya no es posible.</p>
+                        <p class="text-sm">Reglas principales: objetividad, imposición de una decisión justa.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Actividad Interactiva -->
+        <section id="actividad" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-blue-300 text-center">Pon a Prueba tus Conocimientos</h2>
+            <div class="quiz-container">
+                <div id="quiz-question-container">
+                    <p id="quiz-question" class="quiz-question"></p>
+                    <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+                <div id="quiz-feedback" class="quiz-feedback"></div>
+                <button id="quiz-next-btn" class="quiz-next-btn">Siguiente</button>
+                <div id="quiz-results" class="hidden">
+                    <p class="text-2xl font-bold">¡Cuestionario completado!</p>
+                    <p class="text-xl mt-2">Tu puntuación es: <span id="quiz-score"></span></p>
+                    <button id="quiz-restart-btn" class="quiz-restart-btn">Reiniciar</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Lógica para las tarjetas colapsables
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    card.classList.toggle('open');
+                });
+            });
+
+            // Lógica para la actividad interactiva
+            const questions = [
+                {
+                    question: "¿En qué nivel se encuentran dos personas que discuten, pero todavía pueden negociar para llegar a un acuerdo?",
+                    options: ["Ganar-Ganar", "Ganar-Perder", "Perder-Perder"],
+                    answer: "Ganar-Ganar"
+                },
+                {
+                    question: "¿Qué rol de resolución de conflictos pertenece a una persona imparcial que ayuda a facilitar la comunicación entre las partes?",
+                    options: ["Árbitro", "Mediador", "Negociador"],
+                    answer: "Mediador"
+                },
+                {
+                    question: "Un conflicto en el que las partes recurren a mentiras y amenazas para dañarse, ¿en qué nivel de escalada se encuentra?",
+                    options: ["Ganar-Ganar", "Ganar-Perder", "Perder-Perder"],
+                    answer: "Ganar-Perder"
+                },
+                {
+                    question: "¿Qué rol tiene la autoridad para tomar una decisión final y obligatoria para las partes en conflicto?",
+                    options: ["Conciliador", "Mediador", "Árbitro"],
+                    answer: "Árbitro"
+                },
+                {
+                    question: "Un conflicto en el que ambas partes se causan daño mutuamente, ¿en qué nivel se encuentra?",
+                    options: ["Ganar-Ganar", "Ganar-Perder", "Perder-Perder"],
+                    answer: "Perder-Perder"
+                }
+            ];
+
+            let currentQuestionIndex = 0;
+            let score = 0;
+
+            const questionContainer = document.getElementById('quiz-question-container');
+            const questionElement = document.getElementById('quiz-question');
+            const optionsContainer = document.getElementById('quiz-options');
+            const feedbackElement = document.getElementById('quiz-feedback');
+            const nextButton = document.getElementById('quiz-next-btn');
+            const resultsContainer = document.getElementById('quiz-results');
+            const scoreElement = document.getElementById('quiz-score');
+            const restartButton = document.getElementById('quiz-restart-btn');
+
+            function showQuestion(index) {
+                const q = questions[index];
+                questionElement.textContent = q.question;
+                optionsContainer.innerHTML = '';
+                feedbackElement.textContent = '';
+                nextButton.style.display = 'none';
+
+                q.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.addEventListener('click', () => checkAnswer(button, option, q.answer));
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            function checkAnswer(button, selectedOption, correctAnswer) {
+                const isCorrect = selectedOption === correctAnswer;
+                const allButtons = optionsContainer.querySelectorAll('button');
+
+                allButtons.forEach(btn => {
+                    btn.style.pointerEvents = 'none';
+                    if (btn.textContent === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                    if (btn === button && !isCorrect) {
+                        btn.classList.add('incorrect');
+                    }
+                });
+
+                if (isCorrect) {
+                    feedbackElement.textContent = "¡Correcto!";
+                    feedbackElement.classList.remove('incorrect');
+                    feedbackElement.classList.add('correct');
+                    score++;
+                } else {
+                    feedbackElement.textContent = "Incorrecto. Intenta de nuevo.";
+                    feedbackElement.classList.remove('correct');
+                    feedbackElement.classList.add('incorrect');
+                }
+
+                nextButton.style.display = 'block';
+            }
+
+            function showResults() {
+                questionContainer.style.display = 'none';
+                nextButton.style.display = 'none';
+                feedbackElement.style.display = 'none';
+                resultsContainer.style.display = 'block';
+                scoreElement.textContent = `${score} de ${questions.length}`;
+            }
+
+            nextButton.addEventListener('click', () => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion(currentQuestionIndex);
+                } else {
+                    showResults();
+                }
+            });
+
+            restartButton.addEventListener('click', () => {
+                currentQuestionIndex = 0;
+                score = 0;
+                resultsContainer.style.display = 'none';
+                questionContainer.style.display = 'block';
+                feedbackElement.style.display = 'block';
+                showQuestion(currentQuestionIndex);
+            });
+
+            showQuestion(currentQuestionIndex);
+        });
+    </script>
+</body>
+</html>
